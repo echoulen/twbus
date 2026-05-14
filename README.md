@@ -1,4 +1,6 @@
-# twbus
+<p align="left">
+  <img src="docs/logo-readme.svg" alt="twbus" width="440">
+</p>
 
 Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/anthropics/claude-code). Wraps the [TDX V3 API](https://tdx.transportdata.tw/) and exposes 5 slash commands covering Taipei / New Taipei / Keelung / Taichung.
 
@@ -79,6 +81,21 @@ python3 -m venv .venv
 ```
 
 Tests use `unittest.mock.patch('urllib.request.urlopen')` against recorded JSON fixtures in `tests/fixtures/`. No network calls in CI. Live integration tests are opt-in via `pytest -m integration` (requires `TDX_CLIENT_ID` env).
+
+## Branding
+
+| 檔案 | 用途 |
+|---|---|
+| `docs/icon.svg` | 512×512 方形 logo（PyPI 套件頁、app 圖示） |
+| `docs/social-preview.svg` | 1280×640 GitHub social preview，上傳到 repo Settings → Social preview |
+| `docs/logo-readme.svg` | README 頂部的橫式 banner（即上方那張） |
+
+需要 PNG 衍生檔可以用 `rsvg-convert` 或 `inkscape` 導出：
+
+```sh
+rsvg-convert -w 512 docs/icon.svg -o icon-512.png
+rsvg-convert -w 1280 docs/social-preview.svg -o social-preview.png
+```
 
 ## License
 
