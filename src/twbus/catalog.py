@@ -40,13 +40,19 @@ def _build_catalog(sor_payload: list[dict]) -> dict:
             "route_id": entry["RouteID"],
             "sub_routes": [],
         })
+        # TDX v2 StopOfRoute doesn't ship Destination/DepartureStopNameZh; derive
+        # from the first/last Stop ordered by StopSequence. Falls back to the
+        # explicit fields when present (some synthetic fixtures still carry them).
+        stops_sorted = sorted(entry.get("Stops", []), key=lambda s: s.get("StopSequence", 0))
+        derived_dep = stops_sorted[0]["StopName"]["Zh_tw"] if stops_sorted else ""
+        derived_dest = stops_sorted[-1]["StopName"]["Zh_tw"] if stops_sorted else ""
         rec["sub_routes"].append({
             "direction": entry["Direction"],
-            "destination": entry.get("DestinationStopNameZh", ""),
-            "departure": entry.get("DepartureStopNameZh", ""),
+            "destination": entry.get("DestinationStopNameZh") or derived_dest,
+            "departure": entry.get("DepartureStopNameZh") or derived_dep,
             "stops": [
                 {"stop_id": s["StopID"], "stop_name": s["StopName"]["Zh_tw"], "seq": s["StopSequence"]}
-                for s in entry.get("Stops", [])
+                for s in stops_sorted
             ],
         })
         for s in entry.get("Stops", []):

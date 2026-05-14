@@ -11,6 +11,27 @@ def test_city_codes_mapping():
     assert CITY_CODES == {"台北": "Taipei", "新北": "NewTaipei", "基隆": "Keelung", "台中": "Taichung"}
 
 
+def test_build_catalog_derives_destination_from_last_stop_when_field_absent():
+    """Real TDX v2 StopOfRoute payloads don't ship Destination/DepartureStopNameZh."""
+    from twbus.catalog import _build_catalog
+    payload = [
+        {
+            "RouteID": "999",
+            "RouteName": {"Zh_tw": "999"},
+            "Direction": 0,
+            "Stops": [
+                {"StopID": "A", "StopName": {"Zh_tw": "起點"}, "StopSequence": 1},
+                {"StopID": "B", "StopName": {"Zh_tw": "中間"}, "StopSequence": 2},
+                {"StopID": "C", "StopName": {"Zh_tw": "終點"}, "StopSequence": 3},
+            ],
+        }
+    ]
+    cat = _build_catalog(payload)
+    sub = cat["routes"][0]["sub_routes"][0]
+    assert sub["departure"] == "起點"
+    assert sub["destination"] == "終點"
+
+
 def test_load_catalog_fetches_when_cache_missing(fake_home, monkeypatch, load_fixture):
     monkeypatch.setenv("TDX_CLIENT_ID", "id")
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
