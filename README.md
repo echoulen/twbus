@@ -16,7 +16,13 @@ The plugin layer (skills + slash commands) lives in this repo's `.claude-plugin/
 
 1. Install the CLI so `twbus` is on PATH:
    ```sh
-   pipx install twbus   # or: pip install twbus
+   curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash
+   ```
+   裝法：建一個隔離 venv 在 `~/.local/share/twbus/venv`，把 `twbus` symlink 到 `~/.local/bin/`。不依賴 pipx、不污染系統 site-packages。
+   解除安裝：
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/uninstall.sh | bash
+   # 也想清掉 ~/.twbus/（憑證 + 快取 + favourites）：加 --purge
    ```
 2. Install the Claude Code plugin (from this marketplace):
    ```
