@@ -6,11 +6,22 @@ import sys
 
 from twbus.tdx import TwbusError
 from twbus.formatting import err as fmt_err
+from twbus.catalog import CITY_CODES, CITY_CODES_INVERSE
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--json", action="store_true", help="machine-readable JSON envelope")
     p.add_argument("--refresh", action="store_true", help="force-refresh catalog cache")
+
+
+def _city_arg(value: str) -> str:
+    """Accept either Chinese (基隆) or English (Keelung) city names."""
+    if value in CITY_CODES:
+        return CITY_CODES[value]
+    if value in CITY_CODES_INVERSE:
+        return value
+    valid = ", ".join(f"{zh}/{en}" for zh, en in CITY_CODES.items())
+    raise argparse.ArgumentTypeError(f"未知城市 {value!r}，可選：{valid}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_search = sub.add_parser("search", help="fuzzy search routes and stops")
     p_search.add_argument("keyword")
-    p_search.add_argument("--city", choices=["Taipei", "NewTaipei", "Keelung", "Taichung"])
+    p_search.add_argument("--city", type=_city_arg, metavar="台北|新北|基隆|台中")
     p_search.add_argument("--kind", choices=["route", "stop", "all"], default="all")
     _add_common(p_search)
 

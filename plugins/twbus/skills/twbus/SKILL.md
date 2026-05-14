@@ -36,8 +36,24 @@ Taiwan public bus realtime data via TDX v2 Bus API.
 | `/bus-add <ref>` | 加 favourite；ref 不全則列候選 | 同 status，或 partial |
 | `/bus-list` | 列 favourites | — |
 
+## CLI 用法（從自然語言對應到 `twbus` 指令）
+
+`twbus search` 只吃**一個 keyword**：
+
+```sh
+# ✅ OK
+twbus search 6021 --city 基隆 --json
+twbus search 公館 --json
+
+# ❌ 錯：多 keyword，會被當第二個位置參數
+twbus search 基隆 6021 --json
+twbus search 6021 公館 --json
+```
+
+當使用者用自然語言問（例如「基隆 6021」、「找台北的 235」），先**自己拆**成 `keyword` + `--city`，再呼叫 CLI。
+
 ## City codes
-台北 / 新北 / 基隆 / 台中（CLI 內部映射為 Taipei / NewTaipei / Keelung / Taichung）
+`--city` 同時接中文與英文：`台北 / 新北 / 基隆 / 台中` 或 `Taipei / NewTaipei / Keelung / Taichung`，輸出 JSON 內仍以中文 `city` 欄位呈現。
 
 ## Gotchas
 - 第一次跑某城市的 search/status/stop 會抓 catalog（StopOfRoute）並寫入 `~/.twbus/catalog/<city>.json`，7 天 TTL；之後純走 local

@@ -28,6 +28,25 @@ def test_unknown_subcommand():
     assert r.returncode == 2
 
 
+def test_city_arg_accepts_chinese():
+    from twbus.cli import build_parser
+    ns = build_parser().parse_args(["search", "公館", "--city", "基隆"])
+    assert ns.city == "Keelung"
+
+
+def test_city_arg_accepts_english():
+    from twbus.cli import build_parser
+    ns = build_parser().parse_args(["search", "公館", "--city", "Taipei"])
+    assert ns.city == "Taipei"
+
+
+def test_city_arg_rejects_unknown():
+    import pytest
+    from twbus.cli import build_parser
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["search", "公館", "--city", "高雄"])
+
+
 def test_auth_missing_returns_json_envelope_when_json_flag(tmp_path):
     env = {"HOME": str(tmp_path), "PATH": "/usr/bin:/bin"}
     r = run_cli("search", "公館", "--json", env=env)

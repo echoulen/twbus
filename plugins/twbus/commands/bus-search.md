@@ -1,15 +1,29 @@
 ---
 description: "跨台北/新北/基隆/台中模糊搜尋公車路線或站牌"
-argument-hint: "<關鍵字> [--city Taipei|NewTaipei|Keelung|Taichung] [--kind route|stop|all]"
+argument-hint: "<關鍵字> [--city 台北|新北|基隆|台中] [--kind route|stop|all]"
 allowed-tools: Bash
 ---
 
 User 給的搜尋輸入：`$ARGUMENTS`
 
-請執行：
+**重要**：`twbus search` 只吃**一個** keyword 位置參數。若 `$ARGUMENTS` 含多個詞（例如「基隆 6021」），先自行拆解：
+
+1. 若有任何詞屬於 `台北/新北/基隆/台中`（或英文 `Taipei/NewTaipei/Keelung/Taichung`）→ 抽出來放到 `--city`
+2. 剩下的詞合併成單一 keyword（用最具識別性的那個，例如路線號或站名片段）
+3. 不要把多個詞當成多個位置參數丟進去
+
+範例對應：
+
+| 使用者輸入 | 正確指令 |
+|---|---|
+| `基隆 6021` | `twbus search 6021 --city 基隆 --json` |
+| `台北 235 公館` | `twbus search 235 --city 台北 --json`（或 `公館`，看意圖） |
+| `碧嵐大地` | `twbus search 碧嵐大地 --json` |
+
+請執行（替換成你拆好的參數）：
 
 ```bash
-twbus search $ARGUMENTS --json
+twbus search <keyword> [--city <city>] [--kind route|stop|all] --json
 ```
 
 若 bash 回 `command not found: twbus` → CLI 未安裝。告知使用者跑 `curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash`，裝完後重試此 slash command，**不要繼續解析輸出**。
