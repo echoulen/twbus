@@ -1,0 +1,52 @@
+[
+  {
+    "RouteUID": "TPE10132",
+    "RouteID": "10132",
+    "RouteName": { "Zh_tw": "235", "En": "235" },
+    "SubRouteUID": "TPE10132A",
+    "SubRouteID": "10132A",
+    "SubRouteName": { "Zh_tw": "235", "En": "235" },
+    "Direction": 0,
+    "DepartureStopNameZh": "青年公園",
+    "DestinationStopNameZh": "台北車站",
+    "City": "Taipei",
+    "Stops": [
+      { "StopUID": "TPE100", "StopID": "100", "StopName": { "Zh_tw": "青年公園", "En": "" }, "StopSequence": 1 },
+      { "StopUID": "TPE101", "StopID": "101", "StopName": { "Zh_tw": "公館", "En": "" }, "StopSequence": 5 },
+      { "StopUID": "TPE102", "StopID": "102", "StopName": { "Zh_tw": "台北車站", "En": "" }, "StopSequence": 12 }
+    ]
+  },
+  {
+    "RouteUID": "TPE10132",
+    "RouteID": "10132",
+    "RouteName": { "Zh_tw": "235", "En": "235" },
+    "SubRouteUID": "TPE10132B",
+    "SubRouteID": "10132B",
+    "SubRouteName": { "Zh_tw": "235", "En": "235" },
+    "Direction": 1,
+    "DepartureStopNameZh": "台北車站",
+    "DestinationStopNameZh": "青年公園",
+    "City": "Taipei",
+    "Stops": [
+      { "StopUID": "TPE102", "StopID": "102", "StopName": { "Zh_tw": "台北車站", "En": "" }, "StopSequence": 1 },
+      { "StopUID": "TPE101", "StopID": "101", "StopName": { "Zh_tw": "公館", "En": "" }, "StopSequence": 7 },
+      { "StopUID": "TPE100", "StopID": "100", "StopName": { "Zh_tw": "青年公園", "En": "" }, "StopSequence": 12 }
+    ]
+  },
+  {
+    "RouteUID": "TPE10236",
+    "RouteID": "10236",
+    "RouteName": { "Zh_tw": "236", "En": "236" },
+    "SubRouteUID": "TPE10236A",
+    "SubRouteID": "10236A",
+    "SubRouteName": { "Zh_tw": "236", "En": "236" },
+    "Direction": 0,
+    "DepartureStopNameZh": "景美",
+    "DestinationStopNameZh": "台大",
+    "City": "Taipei",
+    "Stops": [
+      { "StopUID": "TPE201", "StopID": "201", "StopName": { "Zh_tw": "景美", "En": "" }, "StopSequence": 1 },
+      { "StopUID": "TPE101", "StopID": "101", "StopName": { "Zh_tw": "公館", "En": "" }, "StopSequence": 8 }
+    ]
+  }
+]
