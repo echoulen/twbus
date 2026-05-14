@@ -57,7 +57,23 @@ def test_status_unknown_ref_per_entry(prime, capsys, load_fixture):
     out = json.loads(capsys.readouterr().out)
     # Even though the only ref failed normalize, envelope is ok:true with fetchError on that entry.
     assert out["ok"] is True
-    assert out["data"][0]["fetchError"]["kind"] == "route_not_found"
+    fe = out["data"][0]["fetchError"]
+    assert fe["kind"] == "route_not_found"
+    # The fix: extra must include suggestions
+    assert "extra" in fe
+    assert "suggestions" in fe["extra"]
+
+
+def test_status_no_data_warning(prime, capsys):
+    """ETA API returns empty -> envelope carries no_data warning."""
+    def _r(path, params):
+        if "EstimatedTimeOfArrival" in path:
+            return []
+        return []
+    with patch("_cmds.tdx_request", side_effect=_r):
+        cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
+    out = json.loads(capsys.readouterr().out)
+    assert any(w["kind"] == "no_data" for w in out.get("warnings", []))
 
 
 def test_status_batches_per_city(prime, capsys, load_fixture, fake_home, monkeypatch):

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import time
 from collections import defaultdict
+from datetime import datetime
 
 from _format import ok as fmt_ok, err as fmt_err, eta_status
 from _tdx import request as tdx_request, load_credentials, TwbusError
@@ -23,8 +25,11 @@ def cmd_search(ns):
     _require_creds()
     cities = [ns.city] if ns.city else list(CITY_CODES.values())
     hits: list[dict] = []
+    stale_cats: list[dict] = []
     for code in cities:
         cat = load_catalog(code, force=ns.refresh)
+        if cat.get("_stale"):
+            stale_cats.append(cat)
         _search_in_catalog(cat, code, ns.keyword.strip(), ns.kind, hits)
     total = len(hits)
     truncated = total > SEARCH_LIMIT
@@ -33,6 +38,13 @@ def cmd_search(ns):
     warnings = []
     if truncated:
         warnings.append({"kind": "truncated", "message": f"共 {total} 筆，僅列前 {SEARCH_LIMIT}", "total": total})
+    for cat in stale_cats:
+        days = int((time.time() - cat["fetched_at"]) / 86400)
+        warnings.append({
+            "kind": "stale_catalog",
+            "message": f"資料 {days} 天前",
+            "fetched_at": datetime.fromtimestamp(cat["fetched_at"]).isoformat(),
+        })
     print(fmt_ok(hits, warnings=warnings))
     return 0
 
@@ -90,7 +102,10 @@ def cmd_status(ns):
         try:
             norm = normalize_ref(ref)
         except TwbusError as e:
-            entries.append({"ref": ref, "fetchError": {"kind": e.kind, "message": e.message}})
+            fe = {"kind": e.kind, "message": e.message}
+            if e.extra:
+                fe["extra"] = e.extra
+            entries.append({"ref": ref, "fetchError": fe})
             continue
         entry = {"ref": ref, "normalized": norm, "etas": []}
         entries.append(entry)
@@ -102,7 +117,10 @@ def cmd_status(ns):
             plate_map = _fetch_plates(city_code, city_entries)
         except TwbusError as e:
             for entry in city_entries:
-                entry["fetchError"] = {"kind": e.kind, "message": e.message}
+                fe = {"kind": e.kind, "message": e.message}
+                if e.extra:
+                    fe["extra"] = e.extra
+                entry["fetchError"] = fe
             continue
         for entry in city_entries:
             norm = entry["normalized"]
@@ -120,7 +138,12 @@ def cmd_status(ns):
                 etas.append({"plate": plate, "seconds": secs, "status": eta_status(secs)})
             entry["etas"] = etas
 
-    print(fmt_ok(entries))
+    warnings = []
+    all_entries_with_etas = [e for e in entries if "etas" in e]
+    if all_entries_with_etas and all(not e["etas"] for e in all_entries_with_etas):
+        warnings.append({"kind": "no_data", "message": "可能末班過或路線停駛"})
+
+    print(fmt_ok(entries, warnings=warnings))
     return 0
 
 
@@ -180,6 +203,14 @@ def cmd_stop(ns):
     city_zh, stop_name = parts
     city_code = CITY_CODES[city_zh]
     cat = load_catalog(city_code, force=ns.refresh)
+    warnings = []
+    if cat.get("_stale"):
+        days = int((time.time() - cat["fetched_at"]) / 86400)
+        warnings.append({
+            "kind": "stale_catalog",
+            "message": f"資料 {days} 天前",
+            "fetched_at": datetime.fromtimestamp(cat["fetched_at"]).isoformat(),
+        })
     if stop_name not in cat["stops_index"]:
         suggestions = difflib.get_close_matches(stop_name, list(cat["stops_index"].keys()), n=3, cutoff=0.5)
         print(fmt_err("stop_not_found", f"{city_zh} 找不到站牌 {stop_name}", {"suggestions": suggestions}))
@@ -212,7 +243,9 @@ def cmd_stop(ns):
     # Sort: None (unknown ETA) goes last; otherwise ascending.
     data.sort(key=lambda x: (x["seconds"] is None, x["seconds"] if x["seconds"] is not None else 0))
     data = data[:ns.limit]
-    print(fmt_ok(data))
+    if not data:
+        warnings.append({"kind": "no_data", "message": "可能末班過或路線停駛"})
+    print(fmt_ok(data, warnings=warnings))
     return 0
 
 

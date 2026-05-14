@@ -78,3 +78,25 @@ def test_search_truncates_at_30(prime_taipei, monkeypatch, capsys):
     out = json.loads(capsys.readouterr().out)
     assert len(out["data"]) == 30
     assert any(w["kind"] == "truncated" for w in out["warnings"])
+
+
+def test_search_emits_stale_catalog_warning(prime_taipei, monkeypatch, capsys, load_fixture):
+    """When catalog is stale (load returned _stale: True), search envelope carries a stale_catalog warning."""
+    import time as _time
+    from _catalog import _build_catalog
+    # Overwrite the primed catalog with a very old one.
+    monkeypatch.setenv("TDX_CLIENT_ID", "id")
+    monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
+    from _catalog import _catalog_path
+    old_cat = _build_catalog(load_fixture("stop_of_route_taipei.json"))
+    old_cat["fetched_at"] = _time.time() - (10 * 86400)
+    _catalog_path("Taipei").write_text(__import__("json").dumps(old_cat, ensure_ascii=False))
+
+    # Force refresh to fail so we fall back to stale.
+    from _tdx import TwbusError
+    from unittest.mock import patch
+    with patch("_catalog.tdx_request", side_effect=TwbusError("network", "down")):
+        cmd_search(_NS(keyword="公館", city="Taipei", kind="all"))
+    import json
+    out = json.loads(capsys.readouterr().out)
+    assert any(w["kind"] == "stale_catalog" for w in out["warnings"])
