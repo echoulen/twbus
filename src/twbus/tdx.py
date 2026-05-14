@@ -183,6 +183,17 @@ def _request_with_token(path: str, params: dict, *, force_refresh_token: bool) -
             return _request_with_token(path, params, force_refresh_token=True)
         if e.code == 429:
             raise TwbusError("rate_limit", "TDX rate limit，請稍後再試") from e
-        raise TwbusError("network", f"TDX API HTTP {e.code}") from e
+        body = _read_error_body(e)
+        raise TwbusError(
+            "network",
+            f"TDX API HTTP {e.code} @ {url}" + (f" — {body}" if body else ""),
+        ) from e
     except URLError as e:
         raise TwbusError("network", f"連線 TDX 失敗：{e.reason}") from e
+
+
+def _read_error_body(e: HTTPError, limit: int = 300) -> str:
+    try:
+        return e.read().decode("utf-8", errors="replace")[:limit].strip()
+    except Exception:
+        return ""
