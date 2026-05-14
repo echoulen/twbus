@@ -9,6 +9,7 @@ from collections import defaultdict
 from _format import ok as fmt_ok, err as fmt_err, eta_status
 from _tdx import request as tdx_request, load_credentials, TwbusError
 from _catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
+from _favs import add_fav, FavRecord
 
 
 SEARCH_LIMIT = 30
@@ -217,7 +218,92 @@ def cmd_stop(ns):
 
 def cmd_add(ns):
     _require_creds()
-    raise NotImplementedError("Task 14")
+    ref = ns.ref
+    parts = ref.split(":")
+    if len(parts) >= 1 and parts[0] not in CITY_CODES:
+        print(f"bad ref: {ref}")
+        return 0
+
+    if len(parts) == 4:
+        return _add_full(ref)
+    if len(parts) == 3:
+        return _add_pick_direction(ref, parts)
+    if len(parts) == 2:
+        return _add_pick_route(ref, parts)
+    print(f"bad ref: {ref}")
+    return 0
+
+
+def _add_full(ref: str) -> int:
+    try:
+        norm = normalize_ref(ref)
+    except TwbusError as e:
+        return _print_add_error(ref, e)
+    label = f"{norm['route_name']} {norm['stop_name']} 往{norm['destination']}"
+    result = add_fav(FavRecord(ref=ref, label=label))
+    if result == "added":
+        print(f"added {ref}\t{label}")
+    else:
+        print(f"already in favourites: {ref}")
+    return 0
+
+
+def _add_pick_direction(ref: str, parts: list[str]) -> int:
+    city_zh, route_name, stop_name = parts
+    city_code = CITY_CODES[city_zh]
+    cat = load_catalog(city_code)
+    route = next((r for r in cat["routes"] if r["route_name"] == route_name), None)
+    if route is None:
+        suggestions = difflib.get_close_matches(route_name, [r["route_name"] for r in cat["routes"]], n=3, cutoff=0.5)
+        print(f"route not found: {route_name}")
+        for s in suggestions:
+            print(f"  {s}")
+        return 0
+    valid_dirs = [s for s in route["sub_routes"] if any(st["stop_name"] == stop_name for st in s["stops"])]
+    if not valid_dirs:
+        print(f"stop not on route: {stop_name}")
+        return 0
+    print(f"ambiguous direction for {ref}, please pick one:")
+    for s in valid_dirs:
+        print(f"  往{s['destination']}")
+    return 0
+
+
+def _add_pick_route(ref: str, parts: list[str]) -> int:
+    city_zh, stop_name = parts
+    city_code = CITY_CODES[city_zh]
+    cat = load_catalog(city_code)
+    if stop_name not in cat["stops_index"]:
+        suggestions = difflib.get_close_matches(stop_name, list(cat["stops_index"].keys()), n=3, cutoff=0.5)
+        print(f"stop not found: {stop_name}")
+        for s in suggestions:
+            print(f"  {s}")
+        return 0
+    routes = sorted({rn for entry in cat["stops_index"][stop_name] for rn in entry["routes"]})
+    print(f"multiple routes at {ref}, please pick one:")
+    for r in routes:
+        print(f"  {r}")
+    return 0
+
+
+def _print_add_error(ref: str, e: TwbusError) -> int:
+    if e.kind == "route_not_found":
+        print(f"route not found: {ref.split(':')[1]}")
+        for s in e.extra.get("suggestions", []):
+            print(f"  {s}")
+    elif e.kind == "stop_not_on_route":
+        print(f"stop not on route: {ref.split(':')[2]}")
+        for s in e.extra.get("stops", []):
+            print(f"  {s}")
+    elif e.kind == "ambiguous_direction":
+        print(f"ambiguous direction for {ref}, please pick one:")
+        for s in e.extra.get("candidates", []):
+            print(f"  {s}")
+    elif e.kind == "bad_ref":
+        print(f"bad ref: {ref}")
+    else:
+        print(f"error [{e.kind}]: {e.message}")
+    return 0
 
 
 def cmd_list(ns):
