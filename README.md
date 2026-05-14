@@ -2,7 +2,7 @@
   <img src="docs/logo-readme.svg" alt="twbus" width="440">
 </p>
 
-Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/anthropics/claude-code). Wraps the [TDX V3 API](https://tdx.transportdata.tw/) and exposes 5 slash commands covering Taipei / New Taipei / Keelung / Taichung.
+Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/anthropics/claude-code). Wraps the [TDX v2 Bus API](https://tdx.transportdata.tw/) and exposes 5 slash commands covering Taipei / New Taipei / Keelung / Taichung.
 
 ## Features
 
@@ -14,33 +14,30 @@ Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/ant
 
 ## Install
 
-The plugin layer (skills + slash commands) lives in this repo's `.claude-plugin/`; the underlying CLI ships separately on PyPI.
+The repo ships two layers — the Claude Code plugin (`.claude-plugin/`, `skills/`, `commands/`) and the underlying `twbus` CLI (Python `src/twbus/`). Install both:
 
 1. Install the CLI so `twbus` is on PATH:
    ```sh
    curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash
    ```
-   裝法：建一個隔離 venv 在 `~/.local/share/twbus/venv`，把 `twbus` symlink 到 `~/.local/bin/`。不依賴 pipx、不污染系統 site-packages。
-   解除安裝：
+   Builds an isolated venv at `~/.local/share/twbus/venv` and symlinks `twbus` into `~/.local/bin/`. No pipx required; doesn't touch system site-packages.
+
+   Uninstall:
    ```sh
    curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/uninstall.sh | bash
-   # 也想清掉 ~/.twbus/（憑證 + 快取 + favourites）：加 --purge
+   # add --purge to also wipe ~/.twbus/ (credentials + cache + favourites)
    ```
-2. Install the Claude Code plugin (from this marketplace):
+2. Install the Claude Code plugin — inside Claude Code, run:
    ```
-   /plugin install <this-marketplace>/twbus
+   /plugin marketplace add echoulen/twbus
+   /plugin install twbus@twbus
    ```
-
-Then provide TDX credentials. The first run prints onboarding instructions and creates an empty skeleton at `~/.twbus/.env`. Fill it in:
-
-```
-TDX_CLIENT_ID=...
-TDX_CLIENT_SECRET=...
-```
-
-(You can also set the same names as environment variables; env wins over `.env`.)
-
-Sign up for credentials at https://tdx.transportdata.tw/.
+3. Provide TDX credentials. Sign up at https://tdx.transportdata.tw/ and add the 公共運輸 → 公車 dataset to your app. Then either fill `~/.twbus/.env` (the first `twbus` invocation creates an empty skeleton):
+   ```
+   TDX_CLIENT_ID=...
+   TDX_CLIENT_SECRET=...
+   ```
+   or export `TDX_CLIENT_ID` / `TDX_CLIENT_SECRET` as environment variables (env wins over `.env`).
 
 ## Standalone CLI
 
@@ -56,8 +53,8 @@ twbus list
 
 ## Requirements
 
-- Python 3.10+ (stdlib only at runtime)
-- TDX free-tier credentials
+- Python 3.10+
+- TDX free-tier credentials (https://tdx.transportdata.tw/)
 
 ## Storage
 
@@ -81,21 +78,6 @@ python3 -m venv .venv
 ```
 
 Tests use `unittest.mock.patch('urllib.request.urlopen')` against recorded JSON fixtures in `tests/fixtures/`. No network calls in CI. Live integration tests are opt-in via `pytest -m integration` (requires `TDX_CLIENT_ID` env).
-
-## Branding
-
-| 檔案 | 用途 |
-|---|---|
-| `docs/icon.svg` | 512×512 方形 logo（PyPI 套件頁、app 圖示） |
-| `docs/social-preview.svg` | 1280×640 GitHub social preview，上傳到 repo Settings → Social preview |
-| `docs/logo-readme.svg` | README 頂部的橫式 banner（即上方那張） |
-
-需要 PNG 衍生檔可以用 `rsvg-convert` 或 `inkscape` 導出：
-
-```sh
-rsvg-convert -w 512 docs/icon.svg -o icon-512.png
-rsvg-convert -w 1280 docs/social-preview.svg -o social-preview.png
-```
 
 ## License
 
