@@ -1,6 +1,6 @@
 {
   "name": "twbus",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "查台北/新北/基隆/台中即時公車到站時間（TDX v2 Bus API）",
   "author": {
     "name": "echoulen"
