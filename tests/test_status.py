@@ -173,6 +173,29 @@ def test_status_no_data_warning(prime, capsys):
     assert any(w["kind"] == "no_data" for w in out.get("warnings", []))
 
 
+def test_status_no_ref_uses_favs(prime, capsys, load_fixture, fake_home):
+    """`twbus status` with no refs should pull refs from ~/.twbus/favourites.json."""
+    favs = [{"ref": "台北:235:公館:往台北車站", "label": "235 公館 往台北車站"}]
+    (fake_home / ".twbus" / "favourites.json").write_text(json.dumps(favs, ensure_ascii=False))
+    eta = load_fixture("eta_taipei_235.json")
+    near = load_fixture("realtime_near_stop_taipei.json")
+    with patch("twbus.cmds.tdx_request", side_effect=_api_router(eta, near)):
+        cmd_status(_NS(ref=[]))
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is True
+    assert len(out["data"]) == 1
+    assert out["data"][0]["ref"] == "台北:235:公館:往台北車站"
+
+
+def test_status_no_ref_no_favs(prime, capsys, fake_home):
+    """`twbus status` with no refs and no favs file — surface a clear warning."""
+    cmd_status(_NS(ref=[]))
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is True
+    assert out["data"] == []
+    assert any(w["kind"] == "no_favourites" for w in out.get("warnings", []))
+
+
 def test_status_batches_per_city(prime, capsys, load_fixture, fake_home, monkeypatch):
     """Two refs same city -> one ETA call. Two refs different cities -> two calls."""
     monkeypatch.setenv("TDX_CLIENT_ID", "id")

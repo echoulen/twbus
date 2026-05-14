@@ -23,8 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_search.add_argument("--kind", choices=["route", "stop", "all"], default="all")
     _add_common(p_search)
 
-    p_status = sub.add_parser("status", help="next-bus ETA for one or more favourite refs")
-    p_status.add_argument("ref", nargs="+")
+    p_status = sub.add_parser("status", help="next-bus ETA for one or more refs (default: all favourites)")
+    p_status.add_argument("ref", nargs="*")
     _add_common(p_status)
 
     p_stop = sub.add_parser("stop", help="all buses approaching one stop")

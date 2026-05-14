@@ -94,9 +94,18 @@ def _odata_quote(s: str) -> str:
 
 def cmd_status(ns):
     _require_creds()
+    refs = list(ns.ref)
+    if not refs:
+        refs = [f.ref for f in list_favs()]
+        if not refs:
+            print(fmt_ok([], warnings=[{
+                "kind": "no_favourites",
+                "message": "尚未加入最愛，先 `twbus add <city>:<route>:<stop>:<direction>`",
+            }]))
+            return 0
     entries = []
     by_city: dict[str, list[dict]] = defaultdict(list)
-    for ref in ns.ref:
+    for ref in refs:
         try:
             norm = normalize_ref(ref)
         except TwbusError as e:
