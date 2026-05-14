@@ -148,3 +148,33 @@ def get_token(force_refresh: bool = False) -> str:
     access_token, expires_in = _fetch_token(cid, csec)
     _write_token_cache(access_token, expires_in)
     return access_token
+
+
+TDX_API_BASE = "https://tdx.transportdata.tw"
+
+
+def request(path: str, params: dict) -> list | dict:
+    """GET <TDX_API_BASE><path>?<params> with Bearer token. Retries once on 401."""
+    if "$format" not in params:
+        params = {**params, "$format": "JSON"}
+    return _request_with_token(path, params, force_refresh_token=False)
+
+
+def _request_with_token(path: str, params: dict, *, force_refresh_token: bool) -> list | dict:
+    token = get_token(force_refresh=force_refresh_token)
+    qs = urlencode(params, safe="$,'")  # keep $ and , unescaped per OData convention
+    url = f"{TDX_API_BASE}{path}?{qs}"
+    req = Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+            return json.loads(resp.read())
+    except HTTPError as e:
+        if e.code == 401:
+            if force_refresh_token:
+                raise TwbusError("auth_invalid", "TDX 拒絕憑證，請檢查 ~/.twbus/.env") from e
+            return _request_with_token(path, params, force_refresh_token=True)
+        if e.code == 429:
+            raise TwbusError("rate_limit", "TDX rate limit，請稍後再試") from e
+        raise TwbusError("network", f"TDX API HTTP {e.code}") from e
+    except URLError as e:
+        raise TwbusError("network", f"連線 TDX 失敗：{e.reason}") from e
