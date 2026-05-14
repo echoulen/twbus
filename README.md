@@ -1,5 +1,8 @@
 <p align="left">
-  <img src="docs/logo-readme.svg" alt="twbus" width="440">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-readme-dark.svg">
+    <img src="docs/logo-readme.svg" alt="twbus" width="440">
+  </picture>
 </p>
 
 Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/anthropics/claude-code). Wraps the [TDX v2 Bus API](https://tdx.transportdata.tw/) and exposes 5 slash commands covering Taipei / New Taipei / Keelung / Taichung.
