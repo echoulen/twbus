@@ -46,6 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_add = sub.add_parser("add", help="add a favourite")
     p_add.add_argument("ref")
 
+    p_remove = sub.add_parser("remove", help="remove a favourite (exact ref)")
+    p_remove.add_argument("ref")
+
     sub.add_parser("list", help="list favourites")
 
     return parser
@@ -67,6 +70,9 @@ def main(argv: list[str] | None = None) -> int:
         if ns.cmd == "add":
             from twbus.cmds import cmd_add
             return cmd_add(ns)
+        if ns.cmd == "remove":
+            from twbus.cmds import cmd_remove
+            return cmd_remove(ns)
         if ns.cmd == "list":
             from twbus.cmds import cmd_list
             return cmd_list(ns)

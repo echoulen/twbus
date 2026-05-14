@@ -44,7 +44,21 @@ def add_fav(rec: FavRecord) -> str:
     if any(f.ref == rec.ref for f in favs):
         return "already"
     favs.append(rec)
+    _write(favs)
+    return "added"
+
+
+def remove_fav(ref: str) -> str:
+    """Return 'removed' or 'not_found'. Exact ref match only."""
+    favs = read_favs()
+    kept = [f for f in favs if f.ref != ref]
+    if len(kept) == len(favs):
+        return "not_found"
+    _write(kept)
+    return "removed"
+
+
+def _write(favs: list[FavRecord]) -> None:
     p = _path()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps([asdict(f) for f in favs], ensure_ascii=False, indent=2))
-    return "added"

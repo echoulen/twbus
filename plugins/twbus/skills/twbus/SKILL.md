@@ -34,6 +34,7 @@ Taiwan public bus realtime data via TDX v2 Bus API.
 | `/bus-status [ref...]` | 查下一班 ETA；無 ref 時查全部最愛 | `<city>:<route>:<stop>:往<終點>` |
 | `/bus-stop <city>:<stop>` | 站牌中心：這站有哪些車要來 | `<city>:<stop>` |
 | `/bus-add <ref>` | 加 favourite；ref 不全則列候選 | 同 status，或 partial |
+| `/bus-remove <ref>` | 從 favourites 移除（需完整 ref） | 同 status |
 | `/bus-list` | 列 favourites | — |
 
 ## CLI 用法（從自然語言對應到 `twbus` 指令）

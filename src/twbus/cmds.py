@@ -9,7 +9,7 @@ from datetime import datetime
 from twbus.formatting import ok as fmt_ok, err as fmt_err, eta_status
 from twbus.tdx import request as tdx_request, load_credentials, TwbusError
 from twbus.catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
-from twbus.favs import add_fav, FavRecord, list_favs
+from twbus.favs import add_fav, FavRecord, list_favs, remove_fav
 
 
 SEARCH_LIMIT = 30
@@ -363,6 +363,18 @@ def _print_add_error(ref: str, e: TwbusError) -> int:
         print(f"bad ref: {ref}")
     else:
         print(f"error [{e.kind}]: {e.message}")
+    return 0
+
+
+def cmd_remove(ns):
+    ref = ns.ref
+    # Look up the label first so we can echo it in the removed line.
+    label = next((f.label for f in list_favs() if f.ref == ref), "")
+    result = remove_fav(ref)
+    if result == "removed":
+        print(f"removed {ref}\t{label}")
+    else:
+        print(f"not in favourites: {ref}")
     return 0
 
 

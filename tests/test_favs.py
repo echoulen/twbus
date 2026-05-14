@@ -29,6 +29,26 @@ def test_list_returns_records_in_order(fake_home):
     ]
 
 
+def test_remove_existing(fake_home):
+    from twbus.favs import remove_fav
+    add_fav(FavRecord(ref="台北:235:公館:往台北車站", label="A"))
+    add_fav(FavRecord(ref="新北:802:板橋:往土城", label="B"))
+    assert remove_fav("台北:235:公館:往台北車站") == "removed"
+    assert [f.ref for f in read_favs()] == ["新北:802:板橋:往土城"]
+
+
+def test_remove_not_found(fake_home):
+    from twbus.favs import remove_fav
+    add_fav(FavRecord(ref="台北:235:公館:往台北車站", label="A"))
+    assert remove_fav("台北:999:nope:往哪") == "not_found"
+    assert len(read_favs()) == 1
+
+
+def test_remove_from_empty(fake_home):
+    from twbus.favs import remove_fav
+    assert remove_fav("台北:235:公館:往台北車站") == "not_found"
+
+
 def test_corrupt_file_is_reset(fake_home):
     (fake_home / ".twbus").mkdir()
     (fake_home / ".twbus" / "favourites.json").write_text("not json")
