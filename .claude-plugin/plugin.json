@@ -1,0 +1,9 @@
+{
+  "name": "twbus",
+  "version": "0.1.0",
+  "description": "查台北/新北/基隆/台中即時公車到站時間（TDX V3）",
+  "author": { "name": "carlosli" },
+  "license": "MIT",
+  "skills": "./skills/",
+  "commands": "./commands/"
+}
