@@ -1,9 +1,14 @@
 """TDX OAuth2 + HTTP helpers. Stdlib only."""
 from __future__ import annotations
 
+import json
 import os
 import re
+import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 
 class TwbusError(Exception):
@@ -80,3 +85,66 @@ def load_credentials() -> tuple[str, str]:
         )
         env_path.chmod(0o600)
     raise TwbusError("auth_missing", _onboarding_message())
+
+
+TDX_TOKEN_URL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token"
+HTTP_TIMEOUT = 15  # seconds
+
+
+def _token_path() -> Path:
+    return _state_dir() / "token.json"
+
+
+def _read_token_cache() -> dict | None:
+    p = _token_path()
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def _write_token_cache(access_token: str, expires_in: int) -> None:
+    p = _token_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({
+        "access_token": access_token,
+        "expires_at": time.time() + expires_in - 60,
+    }))
+
+
+def _fetch_token(client_id: str, client_secret: str) -> tuple[str, int]:
+    body = urlencode({
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }).encode("utf-8")
+    req = Request(
+        TDX_TOKEN_URL,
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+            payload = json.loads(resp.read())
+    except HTTPError as e:
+        if e.code in (400, 401, 403):
+            raise TwbusError("auth_invalid", "TDX 拒絕憑證，請檢查 ~/.twbus/.env") from e
+        raise TwbusError("network", f"TDX token endpoint HTTP {e.code}") from e
+    except URLError as e:
+        raise TwbusError("network", f"連線 TDX 失敗：{e.reason}") from e
+    return payload["access_token"], int(payload.get("expires_in", 86400))
+
+
+def get_token(force_refresh: bool = False) -> str:
+    """Return a valid TDX access token, refreshing if needed."""
+    if not force_refresh:
+        cached = _read_token_cache()
+        if cached and cached.get("expires_at", 0) > time.time() + 60:
+            return cached["access_token"]
+    cid, csec = load_credentials()
+    access_token, expires_in = _fetch_token(cid, csec)
+    _write_token_cache(access_token, expires_in)
+    return access_token
