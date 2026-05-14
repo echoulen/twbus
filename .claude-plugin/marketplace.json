@@ -1,16 +1,21 @@
 {
-  "name": "twbus",
+  "name": "echoulen-twbus",
   "owner": {
-    "name": "carlosli"
+    "name": "echoulen",
+    "url": "https://github.com/echoulen"
+  },
+  "description": "查台北/新北/基隆/台中即時公車到站時間",
+  "version": "0.1.0",
+  "metadata": {
+    "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "twbus",
-      "source": {
-        "source": "github",
-        "repo": "echoulen/twbus"
-      },
-      "description": "查台北/新北/基隆/台中即時公車到站時間（TDX v2 Bus API）"
+      "source": "./plugins/twbus",
+      "description": "查台北/新北/基隆/台中即時公車到站時間（TDX v2 Bus API）",
+      "version": "0.1.0",
+      "license": "MIT"
     }
   ]
 }
