@@ -34,7 +34,7 @@ def primed_token(fake_home, monkeypatch):
 
 def test_request_uses_bearer_and_returns_json(primed_token):
     with patch("twbus.tdx.urlopen", return_value=_resp([{"a": 1}])) as mock_open:
-        data = request("/api/basic/v3/Bus/StopOfRoute/City/Taipei", {"$top": 30})
+        data = request("/api/basic/v2/Bus/StopOfRoute/City/Taipei", {"$top": 30})
     assert data == [{"a": 1}]
     sent: MagicMock = mock_open.call_args.args[0]
     auth = sent.get_header("Authorization")
@@ -60,7 +60,7 @@ def test_request_retries_once_on_401(primed_token, load_fixture):
         return success_resp          # retried API call
 
     with patch("twbus.tdx.urlopen", side_effect=side_effect):
-        data = request("/api/basic/v3/Bus/X/City/Taipei", {})
+        data = request("/api/basic/v2/Bus/X/City/Taipei", {})
     assert data == [{"ok": True}]
     assert side_effect.n == 3
 

@@ -158,7 +158,7 @@ def _fetch_etas(city_code: str, city_entries: list[dict]) -> list[dict]:
     out: list[dict] = []
     for chunk in chunks:
         out.extend(tdx_request(
-            f"/api/basic/v3/Bus/EstimatedTimeOfArrival/City/{city_code}",
+            f"/api/basic/v2/Bus/EstimatedTimeOfArrival/City/{city_code}",
             {"$filter": " or ".join(chunk), "$top": 200},
         ))
     return out
@@ -174,7 +174,7 @@ def _fetch_plates(city_code: str, city_entries: list[dict]) -> dict[tuple[str, i
         for rn, d in keys
     ]
     rows = tdx_request(
-        f"/api/basic/v3/Bus/RealTimeNearStop/City/{city_code}",
+        f"/api/basic/v2/Bus/RealTimeNearStop/City/{city_code}",
         {"$filter": " or ".join(clauses), "$top": 200},
     )
     out: dict[tuple[str, int], str] = {}
@@ -214,7 +214,7 @@ def cmd_stop(ns):
         print(fmt_err("stop_not_found", f"{city_zh} 找不到站牌 {stop_name}", {"suggestions": suggestions}))
         return 0
     rows = tdx_request(
-        f"/api/basic/v3/Bus/EstimatedTimeOfArrival/City/{city_code}",
+        f"/api/basic/v2/Bus/EstimatedTimeOfArrival/City/{city_code}",
         {"$filter": f"StopName/Zh_tw eq '{_odata_quote(stop_name)}'", "$top": 200},
     )
     # Map (route, direction) -> destination via catalog for display labels.

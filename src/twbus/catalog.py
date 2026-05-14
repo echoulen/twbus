@@ -84,7 +84,7 @@ def load_catalog(city_code: str, *, force: bool = False) -> dict:
 
     try:
         payload = tdx_request(
-            f"/api/basic/v3/Bus/StopOfRoute/City/{city_code}",
+            f"/api/basic/v2/Bus/StopOfRoute/City/{city_code}",
             {"$format": "JSON"},
         )
     except TwbusError:
