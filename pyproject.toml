@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twbus"
-version = "0.1.1"
+version = "0.1.2"
 description = "Taiwan bus realtime CLI (TDX V3)"
 requires-python = ">=3.10"
 license = { text = "MIT" }
