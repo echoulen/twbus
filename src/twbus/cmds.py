@@ -120,6 +120,7 @@ def cmd_status(ns):
                     fe["extra"] = e.extra
                 entry["fetchError"] = fe
             continue
+        route_active = _build_route_active(eta_rows)
         for entry in city_entries:
             norm = entry["normalized"]
             matched = [
@@ -129,6 +130,7 @@ def cmd_status(ns):
                 and row.get("Direction") == norm["direction"]
             ]
             matched.sort(key=lambda r: (r.get("EstimateTime") is None, r.get("EstimateTime") or 0))
+            active = route_active.get((norm["route_name"], norm["direction"]), False)
             etas = []
             for row in matched[:3]:
                 secs = row.get("EstimateTime")
@@ -136,7 +138,7 @@ def cmd_status(ns):
                 etas.append({
                     "plate": plate,
                     "seconds": secs,
-                    "status": eta_status(secs, row.get("StopStatus")),
+                    "status": eta_status(secs, row.get("StopStatus"), route_active=active),
                 })
             entry["etas"] = etas
 
@@ -150,12 +152,14 @@ def cmd_status(ns):
 
 
 def _fetch_etas(city_code: str, city_entries: list[dict]) -> list[dict]:
+    # Filter on (route, direction) — not stop. The extra rows let us tell
+    # "尚未發車 because the route is dead" apart from "尚未發車 but other
+    # stops on this route already have ETAs" (long-route case).
     clauses: set[str] = set()
     for entry in city_entries:
         n = entry["normalized"]
         clauses.add(
             f"(RouteName/Zh_tw eq '{_odata_quote(n['route_name'])}' "
-            f"and StopName/Zh_tw eq '{_odata_quote(n['stop_name'])}' "
             f"and Direction eq {n['direction']})"
         )
     chunks = list(_chunks(sorted(clauses), 20))
@@ -163,9 +167,21 @@ def _fetch_etas(city_code: str, city_entries: list[dict]) -> list[dict]:
     for chunk in chunks:
         out.extend(tdx_request(
             f"/api/basic/v2/Bus/EstimatedTimeOfArrival/City/{city_code}",
-            {"$filter": " or ".join(chunk), "$top": 200},
+            {"$filter": " or ".join(chunk), "$top": 1000},
         ))
     return out
+
+
+def _build_route_active(eta_rows: list[dict]) -> dict[tuple[str, int], bool]:
+    active: dict[tuple[str, int], bool] = {}
+    for row in eta_rows:
+        rn = row.get("RouteName", {}).get("Zh_tw")
+        d = row.get("Direction")
+        if rn is None or d is None:
+            continue
+        if row.get("EstimateTime") is not None:
+            active[(rn, d)] = True
+    return active
 
 
 def _fetch_plates(city_code: str, city_entries: list[dict]) -> dict[tuple[str, int], str]:

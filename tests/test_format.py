@@ -54,6 +54,26 @@ def test_eta_status_not_departed():
     assert eta_status(None, 1) == "尚未發車"
 
 
+def test_eta_status_route_active_overrides_not_departed():
+    # StopStatus=1 but other stops on the same route+direction have ETAs —
+    # the route is genuinely running, our stop just isn't covered yet.
+    assert eta_status(None, 1, route_active=True) == "路線運行中"
+
+
+def test_eta_status_route_active_with_status_zero():
+    # StopStatus=0 + None + route_active=True -> "路線運行中".
+    assert eta_status(None, 0, route_active=True) == "路線運行中"
+
+
+def test_eta_status_route_active_respects_last_bus_passed():
+    # 末班過 for our stop specifically — other stops being active doesn't matter.
+    assert eta_status(None, 3, route_active=True) == "末班已過"
+
+
+def test_eta_status_route_active_ignored_when_seconds_present():
+    assert eta_status(180, 0, route_active=True) == "3 分鐘"
+
+
 def test_eta_status_traffic_control():
     assert eta_status(None, 2) == "交管不停駛"
 

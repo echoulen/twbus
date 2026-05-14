@@ -22,22 +22,30 @@ def with_warning(envelope: dict, kind: str, message: str) -> dict:
     return envelope
 
 
-# TDX StopStatus codes carry the authoritative reason when an ETA is missing —
-# without them we'd conflate "route still running, no estimate yet" with "last bus passed".
-_STOP_STATUS_LABEL = {
-    1: "尚未發車",
+# Specific TDX StopStatus reasons that override anything else we know — these
+# are about *this stop* and aren't affected by whether the route is alive.
+_SPECIFIC_STATUS_LABEL = {
     2: "交管不停駛",
     3: "末班已過",
     4: "今日未營運",
 }
 
 
-def eta_status(seconds: int | None, stop_status: int | None = None) -> str:
-    if stop_status in _STOP_STATUS_LABEL:
-        return _STOP_STATUS_LABEL[stop_status]
-    if seconds is None:
-        return "暫無預估"
-    if seconds < 60:
-        return "即將進站"
-    minutes = seconds // 60
-    return f"{minutes} 分鐘"
+def eta_status(
+    seconds: int | None,
+    stop_status: int | None = None,
+    *,
+    route_active: bool = False,
+) -> str:
+    if stop_status in _SPECIFIC_STATUS_LABEL:
+        return _SPECIFIC_STATUS_LABEL[stop_status]
+    if seconds is not None:
+        if seconds < 60:
+            return "即將進站"
+        return f"{seconds // 60} 分鐘"
+    # seconds is None — disambiguate "route alive elsewhere" vs "no service".
+    if route_active:
+        return "路線運行中"
+    if stop_status == 1:
+        return "尚未發車"
+    return "暫無預估"

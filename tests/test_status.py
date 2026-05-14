@@ -88,6 +88,58 @@ def test_status_uses_stop_status(prime, capsys):
     assert entry["etas"][0]["seconds"] is None
 
 
+def test_status_long_route_partially_active(prime, capsys):
+    """Long-route 6021 case: our stop has StopStatus=1 (尚未發車), but
+    another stop on the same route+direction has an active ETA — the route
+    is running, so the label should be '路線運行中', not '尚未發車'."""
+    eta_rows = [
+        {  # our target stop — no estimate yet
+            "RouteName": {"Zh_tw": "235"},
+            "StopName": {"Zh_tw": "公館"},
+            "Direction": 0,
+            "EstimateTime": None,
+            "PlateNumb": None,
+            "StopStatus": 1,
+        },
+        {  # a different stop on the same route+direction — bus is en route
+            "RouteName": {"Zh_tw": "235"},
+            "StopName": {"Zh_tw": "別站"},
+            "Direction": 0,
+            "EstimateTime": 240,
+            "PlateNumb": "KKA-9999",
+            "StopStatus": 0,
+        },
+    ]
+    def _r(path, params):
+        if "EstimatedTimeOfArrival" in path:
+            return eta_rows
+        return []
+    with patch("twbus.cmds.tdx_request", side_effect=_r):
+        cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
+    out = json.loads(capsys.readouterr().out)
+    assert out["data"][0]["etas"][0]["status"] == "路線運行中"
+
+
+def test_status_eta_filter_drops_stopname(prime, capsys, load_fixture):
+    """The ETA OData filter must query by (route, direction) only — without
+    the StopName clause — so we get every stop's row back and can detect
+    route-level activity."""
+    eta = load_fixture("eta_taipei_235.json")
+    near = load_fixture("realtime_near_stop_taipei.json")
+    captured: list[dict] = []
+    def _r(path, params):
+        if "EstimatedTimeOfArrival" in path:
+            captured.append(params)
+            return eta
+        return near
+    with patch("twbus.cmds.tdx_request", side_effect=_r):
+        cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
+    assert captured, "EstimatedTimeOfArrival was never called"
+    flt = captured[0]["$filter"]
+    assert "StopName" not in flt
+    assert "RouteName" in flt and "Direction" in flt
+
+
 def test_status_running_route_no_local_eta(prime, capsys):
     """StopStatus=0 + EstimateTime=None means the route is running but this
     stop has no estimate yet (long-route edge case). Must not say '末班已過'."""
