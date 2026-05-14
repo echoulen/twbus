@@ -9,7 +9,7 @@ from collections import defaultdict
 from _format import ok as fmt_ok, err as fmt_err, eta_status
 from _tdx import request as tdx_request, load_credentials, TwbusError
 from _catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
-from _favs import add_fav, FavRecord
+from _favs import add_fav, FavRecord, list_favs
 
 
 SEARCH_LIMIT = 30
@@ -307,4 +307,10 @@ def _print_add_error(ref: str, e: TwbusError) -> int:
 
 
 def cmd_list(ns):
-    raise NotImplementedError("Task 15")
+    favs = list_favs()
+    if not favs:
+        print("no favourites")
+        return 0
+    for f in favs:
+        print(f"{f.ref}\t{f.label}")
+    return 0
