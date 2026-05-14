@@ -1,0 +1,24 @@
+[
+  {
+    "RouteUID": "TPE10132", "RouteID": "10132",
+    "RouteName": {"Zh_tw": "235", "En": "235"},
+    "SubRouteUID": "TPE10132A",
+    "StopUID": "TPE101", "StopID": "101",
+    "StopName": {"Zh_tw": "公館", "En": ""},
+    "StopSequence": 5,
+    "Direction": 0,
+    "EstimateTime": 180,
+    "PlateNumb": "KKA-1234",
+    "StopStatus": 0
+  },
+  {
+    "RouteUID": "TPE10132", "RouteID": "10132",
+    "RouteName": {"Zh_tw": "235", "En": "235"},
+    "StopUID": "TPE101", "StopID": "101",
+    "StopName": {"Zh_tw": "公館", "En": ""},
+    "Direction": 0,
+    "EstimateTime": 540,
+    "PlateNumb": null,
+    "StopStatus": 0
+  }
+]

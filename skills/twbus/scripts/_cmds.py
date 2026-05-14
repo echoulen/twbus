@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import difflib
+from collections import defaultdict
 
-from _format import ok as fmt_ok, err as fmt_err
-from _tdx import load_credentials
-from _catalog import load_catalog, CITY_CODES, CITY_CODES_INVERSE
+from _format import ok as fmt_ok, err as fmt_err, eta_status
+from _tdx import request as tdx_request, load_credentials, TwbusError
+from _catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
 
 
 SEARCH_LIMIT = 30
@@ -74,10 +75,99 @@ def _matches(candidate: str, kw: str, pool: list[str]) -> bool:
     return len(kw) >= 2 and candidate in difflib.get_close_matches(kw, pool, n=10, cutoff=0.6)
 
 
-# Stubs for later tasks
+# ── status ──────────────────────────────────────────────────────────────────
+
+def _odata_quote(s: str) -> str:
+    return s.replace("'", "''")
+
+
 def cmd_status(ns):
     _require_creds()
-    raise NotImplementedError("Task 12")
+    entries = []
+    by_city: dict[str, list[dict]] = defaultdict(list)
+    for ref in ns.ref:
+        try:
+            norm = normalize_ref(ref)
+        except TwbusError as e:
+            entries.append({"ref": ref, "fetchError": {"kind": e.kind, "message": e.message}})
+            continue
+        entry = {"ref": ref, "normalized": norm, "etas": []}
+        entries.append(entry)
+        by_city[norm["city_code"]].append(entry)
+
+    for city_code, city_entries in by_city.items():
+        try:
+            eta_rows = _fetch_etas(city_code, city_entries)
+            plate_map = _fetch_plates(city_code, city_entries)
+        except TwbusError as e:
+            for entry in city_entries:
+                entry["fetchError"] = {"kind": e.kind, "message": e.message}
+            continue
+        for entry in city_entries:
+            norm = entry["normalized"]
+            matched = [
+                row for row in eta_rows
+                if row.get("RouteName", {}).get("Zh_tw") == norm["route_name"]
+                and row.get("StopName", {}).get("Zh_tw") == norm["stop_name"]
+                and row.get("Direction") == norm["direction"]
+            ]
+            matched.sort(key=lambda r: (r.get("EstimateTime") is None, r.get("EstimateTime") or 0))
+            etas = []
+            for row in matched[:3]:
+                secs = row.get("EstimateTime")
+                plate = row.get("PlateNumb") or plate_map.get((norm["route_name"], norm["direction"]))
+                etas.append({"plate": plate, "seconds": secs, "status": eta_status(secs)})
+            entry["etas"] = etas
+
+    print(fmt_ok(entries))
+    return 0
+
+
+def _fetch_etas(city_code: str, city_entries: list[dict]) -> list[dict]:
+    clauses: set[str] = set()
+    for entry in city_entries:
+        n = entry["normalized"]
+        clauses.add(
+            f"(RouteName/Zh_tw eq '{_odata_quote(n['route_name'])}' "
+            f"and StopName/Zh_tw eq '{_odata_quote(n['stop_name'])}' "
+            f"and Direction eq {n['direction']})"
+        )
+    chunks = list(_chunks(sorted(clauses), 20))
+    out: list[dict] = []
+    for chunk in chunks:
+        out.extend(tdx_request(
+            f"/api/basic/v3/Bus/EstimatedTimeOfArrival/City/{city_code}",
+            {"$filter": " or ".join(chunk), "$top": 200},
+        ))
+    return out
+
+
+def _fetch_plates(city_code: str, city_entries: list[dict]) -> dict[tuple[str, int], str]:
+    """Return {(route_name, direction): plate} from RealTimeNearStop, when bus is near."""
+    keys = {(e["normalized"]["route_name"], e["normalized"]["direction"]) for e in city_entries}
+    if not keys:
+        return {}
+    clauses = [
+        f"(RouteName/Zh_tw eq '{_odata_quote(rn)}' and Direction eq {d})"
+        for rn, d in keys
+    ]
+    rows = tdx_request(
+        f"/api/basic/v3/Bus/RealTimeNearStop/City/{city_code}",
+        {"$filter": " or ".join(clauses), "$top": 200},
+    )
+    out: dict[tuple[str, int], str] = {}
+    for row in rows:
+        rn = row.get("RouteName", {}).get("Zh_tw")
+        d = row.get("Direction")
+        plate = row.get("PlateNumb")
+        if rn and plate:
+            out[(rn, d)] = plate
+    return out
+
+
+def _chunks(items, n: int):
+    for i in range(0, len(items), n):
+        yield items[i:i + n]
 
 
 def cmd_stop(ns):

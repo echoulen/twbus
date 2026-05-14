@@ -1,0 +1,10 @@
+[
+  {
+    "PlateNumb": "KKA-1234",
+    "RouteUID": "TPE10132", "RouteID": "10132",
+    "RouteName": {"Zh_tw": "235"},
+    "Direction": 0,
+    "StopUID": "TPE101",
+    "DutyStatus": 0
+  }
+]
