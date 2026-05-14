@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from _cmds import cmd_add
-from _catalog import _build_catalog
+from twbus.cmds import cmd_add
+from twbus.catalog import _build_catalog
 
 
 @pytest.fixture

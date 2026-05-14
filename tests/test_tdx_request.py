@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 import pytest
 
-from _tdx import request, TwbusError
+from twbus.tdx import request, TwbusError
 
 
 def _resp(payload, status=200):
@@ -33,7 +33,7 @@ def primed_token(fake_home, monkeypatch):
 
 
 def test_request_uses_bearer_and_returns_json(primed_token):
-    with patch("_tdx.urlopen", return_value=_resp([{"a": 1}])) as mock_open:
+    with patch("twbus.tdx.urlopen", return_value=_resp([{"a": 1}])) as mock_open:
         data = request("/api/basic/v3/Bus/StopOfRoute/City/Taipei", {"$top": 30})
     assert data == [{"a": 1}]
     sent: MagicMock = mock_open.call_args.args[0]
@@ -59,7 +59,7 @@ def test_request_retries_once_on_401(primed_token, load_fixture):
             return new_tok_resp     # token refresh
         return success_resp          # retried API call
 
-    with patch("_tdx.urlopen", side_effect=side_effect):
+    with patch("twbus.tdx.urlopen", side_effect=side_effect):
         data = request("/api/basic/v3/Bus/X/City/Taipei", {})
     assert data == [{"ok": True}]
     assert side_effect.n == 3
@@ -76,7 +76,7 @@ def test_request_raises_auth_invalid_after_double_401(primed_token):
             return _resp({"access_token": "new", "expires_in": 86400})
         raise err
 
-    with patch("_tdx.urlopen", side_effect=side_effect):
+    with patch("twbus.tdx.urlopen", side_effect=side_effect):
         with pytest.raises(TwbusError) as exc:
             request("/x", {})
     assert exc.value.kind == "auth_invalid"
@@ -84,7 +84,7 @@ def test_request_raises_auth_invalid_after_double_401(primed_token):
 
 def test_request_429_raises_rate_limit(primed_token):
     err = HTTPError("u", 429, "too many", {}, None)
-    with patch("_tdx.urlopen", side_effect=err):
+    with patch("twbus.tdx.urlopen", side_effect=err):
         with pytest.raises(TwbusError) as exc:
             request("/x", {})
     assert exc.value.kind == "rate_limit"
@@ -92,7 +92,7 @@ def test_request_429_raises_rate_limit(primed_token):
 
 def test_request_network_error(primed_token):
     from urllib.error import URLError
-    with patch("_tdx.urlopen", side_effect=URLError("timed out")):
+    with patch("twbus.tdx.urlopen", side_effect=URLError("timed out")):
         with pytest.raises(TwbusError) as exc:
             request("/x", {})
     assert exc.value.kind == "network"

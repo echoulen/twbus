@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from _cmds import cmd_status
-from _catalog import _build_catalog
+from twbus.cmds import cmd_status
+from twbus.catalog import _build_catalog
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def _api_router(eta_payload, near_payload):
 def test_status_single_ref(prime, capsys, load_fixture):
     eta = load_fixture("eta_taipei_235.json")
     near = load_fixture("realtime_near_stop_taipei.json")
-    with patch("_cmds.tdx_request", side_effect=_api_router(eta, near)):
+    with patch("twbus.cmds.tdx_request", side_effect=_api_router(eta, near)):
         cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
     out = json.loads(capsys.readouterr().out)
     assert out["ok"] is True
@@ -52,7 +52,7 @@ def test_status_single_ref(prime, capsys, load_fixture):
 def test_status_unknown_ref_per_entry(prime, capsys, load_fixture):
     eta = load_fixture("eta_taipei_235.json")
     near = load_fixture("realtime_near_stop_taipei.json")
-    with patch("_cmds.tdx_request", side_effect=_api_router(eta, near)):
+    with patch("twbus.cmds.tdx_request", side_effect=_api_router(eta, near)):
         cmd_status(_NS(ref=["台北:999:公館:往不知道"]))
     out = json.loads(capsys.readouterr().out)
     # Even though the only ref failed normalize, envelope is ok:true with fetchError on that entry.
@@ -70,7 +70,7 @@ def test_status_no_data_warning(prime, capsys):
         if "EstimatedTimeOfArrival" in path:
             return []
         return []
-    with patch("_cmds.tdx_request", side_effect=_r):
+    with patch("twbus.cmds.tdx_request", side_effect=_r):
         cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
     out = json.loads(capsys.readouterr().out)
     assert any(w["kind"] == "no_data" for w in out.get("warnings", []))
@@ -90,7 +90,7 @@ def test_status_batches_per_city(prime, capsys, load_fixture, fake_home, monkeyp
         if "EstimatedTimeOfArrival" in path:
             return eta
         return near
-    with patch("_cmds.tdx_request", side_effect=_router):
+    with patch("twbus.cmds.tdx_request", side_effect=_router):
         cmd_status(_NS(ref=["台北:235:公館:往台北車站", "新北:235:公館:往台北車站"]))
     eta_calls = [c for c in calls if "EstimatedTimeOfArrival" in c[0]]
     assert {c[0].rsplit("/", 1)[-1] for c in eta_calls} == {"Taipei", "NewTaipei"}

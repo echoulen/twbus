@@ -9,7 +9,7 @@ User 要查的 ref：`$ARGUMENTS`
 請執行：
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py" status $ARGUMENTS --json
+twbus status $ARGUMENTS --json
 ```
 
 每筆 `data[]` 帶 `ref / normalized / etas / fetchError?`：

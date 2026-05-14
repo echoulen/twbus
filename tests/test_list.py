@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from _cmds import cmd_list
-from _favs import FavRecord, add_fav
+from twbus.cmds import cmd_list
+from twbus.favs import FavRecord, add_fav
 
 
 class _NS:

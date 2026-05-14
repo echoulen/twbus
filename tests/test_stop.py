@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from _cmds import cmd_stop
-from _catalog import _build_catalog
+from twbus.cmds import cmd_stop
+from twbus.catalog import _build_catalog
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_stop_lists_routes_sorted_by_eta(prime, capsys):
         {"RouteName": {"Zh_tw": "235"}, "StopName": {"Zh_tw": "公館"}, "Direction": 1,
          "EstimateTime": None, "PlateNumb": None},
     ]
-    with patch("_cmds.tdx_request", return_value=eta_payload):
+    with patch("twbus.cmds.tdx_request", return_value=eta_payload):
         cmd_stop(_NS(ref="台北:公館", limit=10))
     out = json.loads(capsys.readouterr().out)
     assert out["ok"] is True
@@ -63,7 +63,7 @@ def test_stop_respects_limit(prime, capsys):
          "EstimateTime": i * 10, "PlateNumb": None}
         for i in range(20)
     ]
-    with patch("_cmds.tdx_request", return_value=eta_payload):
+    with patch("twbus.cmds.tdx_request", return_value=eta_payload):
         cmd_stop(_NS(ref="台北:公館", limit=3))
     out = json.loads(capsys.readouterr().out)
     assert len(out["data"]) == 3

@@ -13,9 +13,10 @@ Taiwan public bus realtime data via TDX V3.
 - 管理常用通勤 favourite（站牌+路線+方向）
 
 ## Setup
-首次使用前需設定 TDX 憑證：
-1. 至 https://tdx.transportdata.tw/ 註冊並建立應用程式
-2. 填入 `~/.twbus/.env`：
+首次使用前：
+1. `pip install twbus`（或 `pipx install twbus`）讓 `twbus` 指令上 PATH
+2. 至 https://tdx.transportdata.tw/ 註冊並建立應用程式
+3. 填入 `~/.twbus/.env`：
    ```
    TDX_CLIENT_ID=...
    TDX_CLIENT_SECRET=...
@@ -46,4 +47,4 @@ Taiwan public bus realtime data via TDX V3.
 - `/bus-search`, `/bus-status`, `/bus-stop` 用 `--json` envelope（`ok / data / warnings / error`）
 - `/bus-add`, `/bus-list` 用純文字 prefix（仿 twparking）
 
-使用者用自然語言問公車時，應**主動**跑對應的 `python3 $CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py ... --json`，把結果整理回中文表格給他，不要等使用者下 slash command。
+使用者用自然語言問公車時，應**主動**跑對應的 `twbus ... --json`，把結果整理回中文表格給他，不要等使用者下 slash command。

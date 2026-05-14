@@ -6,7 +6,7 @@ allowed-tools: Bash
 請執行：
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py" list
+twbus list
 ```
 
 輸出每行是 tab 分隔的 `<ref>\t<label>`：

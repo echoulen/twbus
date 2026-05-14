@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from _tdx import load_credentials, TwbusError
+from twbus.tdx import load_credentials, TwbusError
 
 
 def test_env_var_wins(fake_home, monkeypatch):

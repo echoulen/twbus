@@ -1,15 +1,11 @@
 import json
 import subprocess
 import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-TWBUS = ROOT / "skills" / "twbus" / "scripts" / "twbus.py"
 
 
 def run_cli(*args, env=None):
     return subprocess.run(
-        [sys.executable, str(TWBUS), *args],
+        [sys.executable, "-m", "twbus", *args],
         capture_output=True, text=True, env=env,
     )
 

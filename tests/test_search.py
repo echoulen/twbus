@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from _cmds import cmd_search
-from _catalog import _build_catalog
+from twbus.cmds import cmd_search
+from twbus.catalog import _build_catalog
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def test_search_cross_city_loads_all(prime_taipei, monkeypatch, capsys, load_fix
     monkeypatch.setenv("TDX_CLIENT_ID", "id")
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
     # Provide a tdx_request that returns the same fixture regardless of city.
-    with patch("_catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
+    with patch("twbus.catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
         cmd_search(_NS(keyword="公館", city=None, kind="all"))
         # 4 cities, but Taipei is already cached -> 3 calls.
         assert mock_req.call_count == 3
@@ -70,7 +70,7 @@ def test_search_cross_city_loads_all(prime_taipei, monkeypatch, capsys, load_fix
 
 def test_search_truncates_at_30(prime_taipei, monkeypatch, capsys):
     # Inject a synthetic catalog with > 30 stops named identically.
-    from _catalog import _catalog_path
+    from twbus.catalog import _catalog_path
     big_stops_index = {f"站{i}": [{"stop_id": str(i), "routes": ["X"]}] for i in range(50)}
     cat = {"fetched_at": time.time(), "routes": [], "stops_index": big_stops_index}
     _catalog_path("Taipei").write_text(json.dumps(cat, ensure_ascii=False))
@@ -83,19 +83,19 @@ def test_search_truncates_at_30(prime_taipei, monkeypatch, capsys):
 def test_search_emits_stale_catalog_warning(prime_taipei, monkeypatch, capsys, load_fixture):
     """When catalog is stale (load returned _stale: True), search envelope carries a stale_catalog warning."""
     import time as _time
-    from _catalog import _build_catalog
+    from twbus.catalog import _build_catalog
     # Overwrite the primed catalog with a very old one.
     monkeypatch.setenv("TDX_CLIENT_ID", "id")
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
-    from _catalog import _catalog_path
+    from twbus.catalog import _catalog_path
     old_cat = _build_catalog(load_fixture("stop_of_route_taipei.json"))
     old_cat["fetched_at"] = _time.time() - (10 * 86400)
     _catalog_path("Taipei").write_text(__import__("json").dumps(old_cat, ensure_ascii=False))
 
     # Force refresh to fail so we fall back to stale.
-    from _tdx import TwbusError
+    from twbus.tdx import TwbusError
     from unittest.mock import patch
-    with patch("_catalog.tdx_request", side_effect=TwbusError("network", "down")):
+    with patch("twbus.catalog.tdx_request", side_effect=TwbusError("network", "down")):
         cmd_search(_NS(keyword="公館", city="Taipei", kind="all"))
     import json
     out = json.loads(capsys.readouterr().out)

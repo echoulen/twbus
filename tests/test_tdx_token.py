@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from _tdx import get_token, TwbusError
+from twbus.tdx import get_token, TwbusError
 
 
 def _fake_urlopen(payload: dict, status: int = 200):
@@ -26,7 +26,7 @@ def test_get_token_fetches_and_caches(fake_home, monkeypatch, load_fixture):
     monkeypatch.setenv("TDX_CLIENT_ID", "id")
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
     fixture = load_fixture("token_resp.json")
-    with patch("_tdx.urlopen", return_value=_fake_urlopen(fixture)) as mock_open:
+    with patch("twbus.tdx.urlopen", return_value=_fake_urlopen(fixture)) as mock_open:
         tok = get_token()
     assert tok == "fake-access-token-1"
     cached = json.loads((fake_home / ".twbus" / "token.json").read_text())
@@ -43,7 +43,7 @@ def test_get_token_returns_cached_when_fresh(fake_home, monkeypatch):
         "access_token": "cached-tok",
         "expires_at": time.time() + 1000,
     }))
-    with patch("_tdx.urlopen") as mock_open:
+    with patch("twbus.tdx.urlopen") as mock_open:
         tok = get_token()
     assert tok == "cached-tok"
     mock_open.assert_not_called()
@@ -57,7 +57,7 @@ def test_get_token_refreshes_when_expiring(fake_home, monkeypatch, load_fixture)
         "access_token": "old-tok",
         "expires_at": time.time() + 30,  # within 60s slack -> refresh
     }))
-    with patch("_tdx.urlopen", return_value=_fake_urlopen(load_fixture("token_resp.json"))) as mock_open:
+    with patch("twbus.tdx.urlopen", return_value=_fake_urlopen(load_fixture("token_resp.json"))) as mock_open:
         tok = get_token()
     assert tok == "fake-access-token-1"
     mock_open.assert_called_once()
@@ -71,7 +71,7 @@ def test_get_token_force_refresh(fake_home, monkeypatch, load_fixture):
         "access_token": "old-tok",
         "expires_at": time.time() + 1000,
     }))
-    with patch("_tdx.urlopen", return_value=_fake_urlopen(load_fixture("token_resp.json"))) as mock_open:
+    with patch("twbus.tdx.urlopen", return_value=_fake_urlopen(load_fixture("token_resp.json"))) as mock_open:
         tok = get_token(force_refresh=True)
     assert tok == "fake-access-token-1"
     mock_open.assert_called_once()

@@ -9,7 +9,7 @@ User 給的搜尋輸入：`$ARGUMENTS`
 請執行：
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py" search $ARGUMENTS --json
+twbus search $ARGUMENTS --json
 ```
 
 JSON envelope 是 `{ok, data, warnings}`：

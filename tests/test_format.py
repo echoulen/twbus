@@ -1,6 +1,6 @@
 import json
 
-from _format import ok, err, with_warning, eta_status
+from twbus.formatting import ok, err, with_warning, eta_status
 
 
 def test_ok_minimal():

@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from _catalog import normalize_ref
-from _tdx import TwbusError
+from twbus.catalog import normalize_ref
+from twbus.tdx import TwbusError
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def with_taipei_catalog(fake_home, load_fixture, monkeypatch):
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
     cat_dir = fake_home / ".twbus" / "catalog"
     cat_dir.mkdir(parents=True)
-    from _catalog import _build_catalog
+    from twbus.catalog import _build_catalog
     cat = _build_catalog(load_fixture("stop_of_route_taipei.json"))
     (cat_dir / "Taipei.json").write_text(json.dumps(cat, ensure_ascii=False))
 

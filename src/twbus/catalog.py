@@ -7,7 +7,7 @@ import os
 import time
 from pathlib import Path
 
-from _tdx import request as tdx_request, TwbusError
+from twbus.tdx import request as tdx_request, TwbusError
 
 
 CITY_CODES = {

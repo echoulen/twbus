@@ -1,15 +1,11 @@
-#!/usr/bin/env python3
-# skills/twbus/scripts/twbus.py
 """twbus CLI dispatcher. Stdlib only."""
 from __future__ import annotations
 
 import argparse
 import sys
 
-# Import siblings (this script is invoked directly; scripts/ is on sys.path
-# implicitly because Python prepends the script's dir).
-from _tdx import TwbusError
-from _format import err as fmt_err
+from twbus.tdx import TwbusError
+from twbus.formatting import err as fmt_err
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
@@ -49,19 +45,19 @@ def main(argv: list[str] | None = None) -> int:
     ns = parser.parse_args(argv)
     try:
         if ns.cmd == "search":
-            from _cmds import cmd_search
+            from twbus.cmds import cmd_search
             return cmd_search(ns)
         if ns.cmd == "status":
-            from _cmds import cmd_status
+            from twbus.cmds import cmd_status
             return cmd_status(ns)
         if ns.cmd == "stop":
-            from _cmds import cmd_stop
+            from twbus.cmds import cmd_stop
             return cmd_stop(ns)
         if ns.cmd == "add":
-            from _cmds import cmd_add
+            from twbus.cmds import cmd_add
             return cmd_add(ns)
         if ns.cmd == "list":
-            from _cmds import cmd_list
+            from twbus.cmds import cmd_list
             return cmd_list(ns)
     except TwbusError as e:
         if getattr(ns, "json", False):

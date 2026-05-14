@@ -9,7 +9,7 @@ User 要加的 ref：`$ARGUMENTS`
 請執行：
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py" add $ARGUMENTS
+twbus add $ARGUMENTS
 ```
 
 輸出是純文字、用 prefix 判斷：

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from _favs import read_favs, add_fav, list_favs, FavRecord
+from twbus.favs import read_favs, add_fav, list_favs, FavRecord
 
 
 def test_read_empty(fake_home):

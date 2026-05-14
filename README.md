@@ -12,9 +12,16 @@ Taiwan public bus realtime skill plugin for [Claude Code](https://github.com/ant
 
 ## Install
 
-```
-/plugin install <this-marketplace>/twbus
-```
+The plugin layer (skills + slash commands) lives in this repo's `.claude-plugin/`; the underlying CLI ships separately on PyPI.
+
+1. Install the CLI so `twbus` is on PATH:
+   ```sh
+   pipx install twbus   # or: pip install twbus
+   ```
+2. Install the Claude Code plugin (from this marketplace):
+   ```
+   /plugin install <this-marketplace>/twbus
+   ```
 
 Then provide TDX credentials. The first run prints onboarding instructions and creates an empty skeleton at `~/.twbus/.env`. Fill it in:
 
@@ -27,9 +34,21 @@ TDX_CLIENT_SECRET=...
 
 Sign up for credentials at https://tdx.transportdata.tw/.
 
+## Standalone CLI
+
+Even without Claude Code the CLI is usable:
+
+```sh
+twbus search 公館
+twbus status 台北:235:公館:往台北車站
+twbus stop 台北:公館
+twbus add 台北:235:公館:往台北車站
+twbus list
+```
+
 ## Requirements
 
-- Python 3.10+ (stdlib only — no pip install of the plugin itself)
+- Python 3.10+ (stdlib only at runtime)
 - TDX free-tier credentials
 
 ## Storage

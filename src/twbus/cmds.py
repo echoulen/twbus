@@ -1,17 +1,15 @@
-# skills/twbus/scripts/_cmds.py
-"""Subcommand implementations. Filled out across Tasks 10–15."""
+"""Subcommand implementations."""
 from __future__ import annotations
 
-import argparse
 import difflib
 import time
 from collections import defaultdict
 from datetime import datetime
 
-from _format import ok as fmt_ok, err as fmt_err, eta_status
-from _tdx import request as tdx_request, load_credentials, TwbusError
-from _catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
-from _favs import add_fav, FavRecord, list_favs
+from twbus.formatting import ok as fmt_ok, err as fmt_err, eta_status
+from twbus.tdx import request as tdx_request, load_credentials, TwbusError
+from twbus.catalog import load_catalog, normalize_ref, CITY_CODES, CITY_CODES_INVERSE
+from twbus.favs import add_fav, FavRecord, list_favs
 
 
 SEARCH_LIMIT = 30

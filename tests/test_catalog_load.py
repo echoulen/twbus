@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from _catalog import load_catalog, CITY_CODES
+from twbus.catalog import load_catalog, CITY_CODES
 
 
 def test_city_codes_mapping():
@@ -20,7 +20,7 @@ def test_load_catalog_fetches_when_cache_missing(fake_home, monkeypatch, load_fi
         "expires_at": time.time() + 1000,
     }))
     sor = load_fixture("stop_of_route_taipei.json")
-    with patch("_catalog.tdx_request", return_value=sor) as mock_req:
+    with patch("twbus.catalog.tdx_request", return_value=sor) as mock_req:
         cat = load_catalog("Taipei")
     mock_req.assert_called_once()
     # Catalog file written.
@@ -44,7 +44,7 @@ def test_load_catalog_uses_cache_when_fresh(fake_home, monkeypatch):
         "routes": [{"route_name": "X"}],
         "stops_index": {}
     }))
-    with patch("_catalog.tdx_request") as mock_req:
+    with patch("twbus.catalog.tdx_request") as mock_req:
         cat = load_catalog("Taipei")
     mock_req.assert_not_called()
     assert cat["routes"][0]["route_name"] == "X"
@@ -65,7 +65,7 @@ def test_load_catalog_refreshes_when_expired(fake_home, monkeypatch, load_fixtur
         "routes": [],
         "stops_index": {}
     }))
-    with patch("_catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
+    with patch("twbus.catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
         cat = load_catalog("Taipei")
     mock_req.assert_called_once()
     assert any(r["route_name"] == "235" for r in cat["routes"])
@@ -81,13 +81,13 @@ def test_load_catalog_force_refresh(fake_home, monkeypatch, load_fixture):
         "routes": [],
         "stops_index": {}
     }))
-    with patch("_catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
+    with patch("twbus.catalog.tdx_request", return_value=load_fixture("stop_of_route_taipei.json")) as mock_req:
         load_catalog("Taipei", force=True)
     mock_req.assert_called_once()
 
 
 def test_load_catalog_falls_back_to_stale(fake_home, monkeypatch):
-    from _tdx import TwbusError
+    from twbus.tdx import TwbusError
     monkeypatch.setenv("TDX_CLIENT_ID", "id")
     monkeypatch.setenv("TDX_CLIENT_SECRET", "sec")
     cat_dir = fake_home / ".twbus" / "catalog"
@@ -97,7 +97,7 @@ def test_load_catalog_falls_back_to_stale(fake_home, monkeypatch):
         "routes": [{"route_name": "stale"}],
         "stops_index": {}
     }))
-    with patch("_catalog.tdx_request", side_effect=TwbusError("network", "down")):
+    with patch("twbus.catalog.tdx_request", side_effect=TwbusError("network", "down")):
         cat = load_catalog("Taipei")
     assert cat["routes"][0]["route_name"] == "stale"
     assert cat.get("_stale") is True

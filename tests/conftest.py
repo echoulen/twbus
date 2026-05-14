@@ -1,16 +1,10 @@
 """Pytest config: every test gets an isolated $HOME so ~/.twbus/ never collides."""
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = ROOT / "skills" / "twbus" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-
-# Make `import _tdx` etc. work in tests without packaging.
-sys.path.insert(0, str(SCRIPTS))
 
 
 @pytest.fixture

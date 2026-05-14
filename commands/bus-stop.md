@@ -9,7 +9,7 @@ User 要查的站牌：`$ARGUMENTS`
 請執行：
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/skills/twbus/scripts/twbus.py" stop $ARGUMENTS --json
+twbus stop $ARGUMENTS --json
 ```
 
 `data[]` 每筆 `{route, direction_label, destination, seconds, plate, status}`，已按 ETA 排序。
