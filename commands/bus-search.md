@@ -12,6 +12,8 @@ User 給的搜尋輸入：`$ARGUMENTS`
 twbus search $ARGUMENTS --json
 ```
 
+若 bash 回 `command not found: twbus` → CLI 未安裝。告知使用者跑 `curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash`，裝完後重試此 slash command，**不要繼續解析輸出**。
+
 JSON envelope 是 `{ok, data, warnings}`：
 - `ok: false` + `error.kind == "auth_missing"` → 把 `error.message` 原樣轉達給使用者，**不要**自己幫忙設環境變數
 - `ok: true` + `data: []` → 顯示「沒找到符合的路線或站牌」

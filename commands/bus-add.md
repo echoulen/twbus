@@ -12,6 +12,8 @@ User 要加的 ref：`$ARGUMENTS`
 twbus add $ARGUMENTS
 ```
 
+若 bash 回 `command not found: twbus` → CLI 未安裝。告知使用者跑 `curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash`，裝完後重試此 slash command，**不要繼續解析輸出**。
+
 輸出是純文字、用 prefix 判斷：
 
 - `added <ref>\t<label>` → 顯示「已加入 <ref> <label>」

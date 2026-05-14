@@ -12,6 +12,8 @@ User 要查的站牌：`$ARGUMENTS`
 twbus stop $ARGUMENTS --json
 ```
 
+若 bash 回 `command not found: twbus` → CLI 未安裝。告知使用者跑 `curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash`，裝完後重試此 slash command，**不要繼續解析輸出**。
+
 `data[]` 每筆 `{route, direction_label, destination, seconds, plate, status}`，已按 ETA 排序。
 
 | 路線 | 方向 | 剩餘 | 車牌 |

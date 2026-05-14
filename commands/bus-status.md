@@ -12,6 +12,8 @@ User 要查的 ref：`$ARGUMENTS`
 twbus status $ARGUMENTS --json
 ```
 
+若 bash 回 `command not found: twbus` → CLI 未安裝。告知使用者跑 `curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash`，裝完後重試此 slash command，**不要繼續解析輸出**。
+
 每筆 `data[]` 帶 `ref / normalized / etas / fetchError?`：
 
 | 路線 | 站牌 | 方向 | 剩餘 | 車牌 | 狀態 |

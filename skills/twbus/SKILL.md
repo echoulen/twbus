@@ -5,7 +5,7 @@ description: "查台北/新北/基隆/台中即時公車到站時間、模糊搜
 
 # twbus
 
-Taiwan public bus realtime data via TDX V3.
+Taiwan public bus realtime data via TDX v2 Bus API.
 
 ## When to use
 - 使用者問「公車多久到」「235 在哪」「公館站有什麼車」
@@ -14,8 +14,11 @@ Taiwan public bus realtime data via TDX V3.
 
 ## Setup
 首次使用前：
-1. `pip install twbus`（或 `pipx install twbus`）讓 `twbus` 指令上 PATH
-2. 至 https://tdx.transportdata.tw/ 註冊並建立應用程式
+1. 安裝 CLI（讓 `twbus` 指令上 PATH）：
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/echoulen/twbus/main/install.sh | bash
+   ```
+2. 至 https://tdx.transportdata.tw/ 註冊並建立應用程式（記得在 app 後台勾選「公共運輸 → 公車」資料集）
 3. 填入 `~/.twbus/.env`：
    ```
    TDX_CLIENT_ID=...
