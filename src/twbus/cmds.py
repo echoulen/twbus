@@ -133,13 +133,17 @@ def cmd_status(ns):
             for row in matched[:3]:
                 secs = row.get("EstimateTime")
                 plate = row.get("PlateNumb") or plate_map.get((norm["route_name"], norm["direction"]))
-                etas.append({"plate": plate, "seconds": secs, "status": eta_status(secs)})
+                etas.append({
+                    "plate": plate,
+                    "seconds": secs,
+                    "status": eta_status(secs, row.get("StopStatus")),
+                })
             entry["etas"] = etas
 
     warnings = []
     all_entries_with_etas = [e for e in entries if "etas" in e]
     if all_entries_with_etas and all(not e["etas"] for e in all_entries_with_etas):
-        warnings.append({"kind": "no_data", "message": "可能末班過或路線停駛"})
+        warnings.append({"kind": "no_data", "message": "查無班次預估"})
 
     print(fmt_ok(entries, warnings=warnings))
     return 0
@@ -236,13 +240,13 @@ def cmd_stop(ns):
             "destination": dest_map.get((rn, d), ""),
             "seconds": secs,
             "plate": plate,
-            "status": eta_status(secs),
+            "status": eta_status(secs, row.get("StopStatus")),
         })
     # Sort: None (unknown ETA) goes last; otherwise ascending.
     data.sort(key=lambda x: (x["seconds"] is None, x["seconds"] if x["seconds"] is not None else 0))
     data = data[:ns.limit]
     if not data:
-        warnings.append({"kind": "no_data", "message": "可能末班過或路線停駛"})
+        warnings.append({"kind": "no_data", "message": "查無班次預估"})
     print(fmt_ok(data, warnings=warnings))
     return 0
 

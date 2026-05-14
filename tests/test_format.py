@@ -39,5 +39,39 @@ def test_eta_status_normal():
     assert eta_status(180) == "3 分鐘"
 
 
+def test_eta_status_normal_status_zero():
+    # StopStatus=0 (正常) + seconds -> seconds-based label.
+    assert eta_status(180, 0) == "3 分鐘"
+    assert eta_status(45, 0) == "即將進站"
+
+
+def test_eta_status_running_but_no_eta():
+    # StopStatus=0 + None -> route is running, this stop just has no estimate yet.
+    assert eta_status(None, 0) == "暫無預估"
+
+
+def test_eta_status_not_departed():
+    assert eta_status(None, 1) == "尚未發車"
+
+
+def test_eta_status_traffic_control():
+    assert eta_status(None, 2) == "交管不停駛"
+
+
+def test_eta_status_last_bus_passed():
+    assert eta_status(None, 3) == "末班已過"
+
+
+def test_eta_status_not_operating_today():
+    assert eta_status(None, 4) == "今日未營運"
+
+
+def test_eta_status_unknown_status_falls_back():
+    # Unknown StopStatus code -> fall back to seconds-based label.
+    assert eta_status(180, 99) == "3 分鐘"
+    assert eta_status(None, 99) == "暫無預估"
+
+
 def test_eta_status_unknown():
-    assert eta_status(None) == "未發車或末班已過"
+    # Backward compat: no stop_status provided, seconds None -> 暫無預估.
+    assert eta_status(None) == "暫無預估"

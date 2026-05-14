@@ -22,9 +22,21 @@ def with_warning(envelope: dict, kind: str, message: str) -> dict:
     return envelope
 
 
-def eta_status(seconds: int | None) -> str:
+# TDX StopStatus codes carry the authoritative reason when an ETA is missing —
+# without them we'd conflate "route still running, no estimate yet" with "last bus passed".
+_STOP_STATUS_LABEL = {
+    1: "尚未發車",
+    2: "交管不停駛",
+    3: "末班已過",
+    4: "今日未營運",
+}
+
+
+def eta_status(seconds: int | None, stop_status: int | None = None) -> str:
+    if stop_status in _STOP_STATUS_LABEL:
+        return _STOP_STATUS_LABEL[stop_status]
     if seconds is None:
-        return "未發車或末班已過"
+        return "暫無預估"
     if seconds < 60:
         return "即將進站"
     minutes = seconds // 60

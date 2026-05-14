@@ -64,6 +64,51 @@ def test_status_unknown_ref_per_entry(prime, capsys, load_fixture):
     assert "suggestions" in fe["extra"]
 
 
+def test_status_uses_stop_status(prime, capsys):
+    """When EstimateTime is None but StopStatus distinguishes the reason,
+    the per-entry status text should reflect StopStatus, not the legacy
+    conflated 'unknown' label."""
+    eta_rows = [{
+        "RouteName": {"Zh_tw": "235"},
+        "StopName": {"Zh_tw": "公館"},
+        "Direction": 0,
+        "EstimateTime": None,
+        "PlateNumb": None,
+        "StopStatus": 1,  # 尚未發車
+    }]
+    def _r(path, params):
+        if "EstimatedTimeOfArrival" in path:
+            return eta_rows
+        return []
+    with patch("twbus.cmds.tdx_request", side_effect=_r):
+        cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
+    out = json.loads(capsys.readouterr().out)
+    entry = out["data"][0]
+    assert entry["etas"][0]["status"] == "尚未發車"
+    assert entry["etas"][0]["seconds"] is None
+
+
+def test_status_running_route_no_local_eta(prime, capsys):
+    """StopStatus=0 + EstimateTime=None means the route is running but this
+    stop has no estimate yet (long-route edge case). Must not say '末班已過'."""
+    eta_rows = [{
+        "RouteName": {"Zh_tw": "235"},
+        "StopName": {"Zh_tw": "公館"},
+        "Direction": 0,
+        "EstimateTime": None,
+        "PlateNumb": None,
+        "StopStatus": 0,
+    }]
+    def _r(path, params):
+        if "EstimatedTimeOfArrival" in path:
+            return eta_rows
+        return []
+    with patch("twbus.cmds.tdx_request", side_effect=_r):
+        cmd_status(_NS(ref=["台北:235:公館:往台北車站"]))
+    out = json.loads(capsys.readouterr().out)
+    assert out["data"][0]["etas"][0]["status"] == "暫無預估"
+
+
 def test_status_no_data_warning(prime, capsys):
     """ETA API returns empty -> envelope carries no_data warning."""
     def _r(path, params):
