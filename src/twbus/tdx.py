@@ -4,11 +4,19 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import time
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+import certifi
+
+# Use certifi's Mozilla-curated CA bundle. Some macOS/Linux system bundles
+# include CA certs whose basicConstraints aren't marked critical, which
+# OpenSSL 3.x rejects ("Basic Constraints of CA cert not marked critical").
+_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 
 class TwbusError(Exception):
@@ -127,7 +135,7 @@ def _fetch_token(client_id: str, client_secret: str) -> tuple[str, int]:
         method="POST",
     )
     try:
-        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+        with urlopen(req, timeout=HTTP_TIMEOUT, context=_SSL_CONTEXT) as resp:
             payload = json.loads(resp.read())
     except HTTPError as e:
         if e.code in (400, 401, 403):
@@ -166,7 +174,7 @@ def _request_with_token(path: str, params: dict, *, force_refresh_token: bool) -
     url = f"{TDX_API_BASE}{path}?{qs}"
     req = Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
-        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+        with urlopen(req, timeout=HTTP_TIMEOUT, context=_SSL_CONTEXT) as resp:
             return json.loads(resp.read())
     except HTTPError as e:
         if e.code == 401:
