@@ -30,7 +30,7 @@ The repo ships two layers — the Claude Code plugin (`.claude-plugin/`, `skills
 2. Install the Claude Code plugin — inside Claude Code, run:
    ```
    /plugin marketplace add echoulen/twbus
-   /plugin install twbus@echoulen-twbus
+   /plugin install twbus@twbus
    ```
 3. Provide TDX credentials. Sign up at https://tdx.transportdata.tw/ and add the 公共運輸 → 公車 dataset to your app. Then either fill `~/.twbus/.env` (the first `twbus` invocation creates an empty skeleton):
    ```
