@@ -172,7 +172,47 @@ def _chunks(items, n: int):
 
 def cmd_stop(ns):
     _require_creds()
-    raise NotImplementedError("Task 13")
+    parts = ns.ref.split(":")
+    if len(parts) != 2 or parts[0] not in CITY_CODES:
+        print(fmt_err("bad_ref", f"ref 格式應為 <city>:<stop>，得到 {ns.ref!r}"))
+        return 0
+    city_zh, stop_name = parts
+    city_code = CITY_CODES[city_zh]
+    cat = load_catalog(city_code, force=ns.refresh)
+    if stop_name not in cat["stops_index"]:
+        suggestions = difflib.get_close_matches(stop_name, list(cat["stops_index"].keys()), n=3, cutoff=0.5)
+        print(fmt_err("stop_not_found", f"{city_zh} 找不到站牌 {stop_name}", {"suggestions": suggestions}))
+        return 0
+    rows = tdx_request(
+        f"/api/basic/v3/Bus/EstimatedTimeOfArrival/City/{city_code}",
+        {"$filter": f"StopName/Zh_tw eq '{_odata_quote(stop_name)}'", "$top": 200},
+    )
+    # Map (route, direction) -> destination via catalog for display labels.
+    dest_map: dict[tuple[str, int], str] = {}
+    for r in cat["routes"]:
+        for sub in r["sub_routes"]:
+            dest_map[(r["route_name"], sub["direction"])] = sub["destination"]
+
+    data = []
+    for row in rows:
+        rn = row.get("RouteName", {}).get("Zh_tw")
+        d = row.get("Direction")
+        secs = row.get("EstimateTime")
+        plate = row.get("PlateNumb")
+        data.append({
+            "route": rn,
+            "direction": d,
+            "direction_label": f"往{dest_map.get((rn, d), '?')}",
+            "destination": dest_map.get((rn, d), ""),
+            "seconds": secs,
+            "plate": plate,
+            "status": eta_status(secs),
+        })
+    # Sort: None (unknown ETA) goes last; otherwise ascending.
+    data.sort(key=lambda x: (x["seconds"] is None, x["seconds"] if x["seconds"] is not None else 0))
+    data = data[:ns.limit]
+    print(fmt_ok(data))
+    return 0
 
 
 def cmd_add(ns):
